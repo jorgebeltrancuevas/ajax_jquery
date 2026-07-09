@@ -5,7 +5,7 @@ include "conexion.php";
 $accion = $_POST["accion"] ?? $_GET["accion"] ?? "";
 
 if ($accion == "listar") {
-    $busqueda = $_POST["busqueda"] ?? "";
+    $busqueda = "%" . ($_POST["busqueda"] ?? "") . "%";
     $orden = $_POST["orden"] ?? "ASC";
     $pagina = isset($_POST["pagina"]) ? intval($_POST["pagina"]) : 1;
     $limite = isset($_POST["limite"]) ? intval($_POST["limite"]) : 5;
@@ -15,29 +15,29 @@ if ($accion == "listar") {
     }
 
     $inicio = ($pagina - 1) * $limite;
-    $busqueda = $conexion->real_escape_string($busqueda);
 
     $sqlTotal = "SELECT COUNT(*) AS total FROM usuarios
-                 WHERE nombre LIKE '%$busqueda%'
-                 OR correo LIKE '%$busqueda%'
-                 OR telefono LIKE '%$busqueda%'
-                 OR ciudad LIKE '%$busqueda%'";
+                 WHERE nombre ILIKE $1
+                 OR correo ILIKE $1
+                 OR telefono ILIKE $1
+                 OR ciudad ILIKE $1";
 
-    $resultadoTotal = $conexion->query($sqlTotal);
-    $total = $resultadoTotal->fetch_assoc()["total"];
+    $resultadoTotal = pg_query_params($conexion, $sqlTotal, [$busqueda]);
+    $total = pg_fetch_assoc($resultadoTotal)["total"];
 
     $sql = "SELECT * FROM usuarios
-            WHERE nombre LIKE '%$busqueda%'
-            OR correo LIKE '%$busqueda%'
-            OR telefono LIKE '%$busqueda%'
-            OR ciudad LIKE '%$busqueda%'
+            WHERE nombre ILIKE $1
+            OR correo ILIKE $1
+            OR telefono ILIKE $1
+            OR ciudad ILIKE $1
             ORDER BY nombre $orden
-            LIMIT $inicio, $limite";
+            LIMIT $2 OFFSET $3";
 
-    $resultado = $conexion->query($sql);
+    $resultado = pg_query_params($conexion, $sql, [$busqueda, $limite, $inicio]);
+
     $usuarios = [];
 
-    while ($fila = $resultado->fetch_assoc()) {
+    while ($fila = pg_fetch_assoc($resultado)) {
         $usuarios[] = $fila;
     }
 
@@ -75,27 +75,24 @@ if ($accion == "agregar" || $accion == "editar") {
         exit;
     }
 
-    $nombre = $conexion->real_escape_string($nombre);
-    $correo = $conexion->real_escape_string($correo);
-    $telefono = $conexion->real_escape_string($telefono);
-    $ciudad = $conexion->real_escape_string($ciudad);
-
     if ($accion == "agregar") {
         $sql = "INSERT INTO usuarios (nombre, correo, telefono, ciudad)
-                VALUES ('$nombre', '$correo', '$telefono', '$ciudad')";
+                VALUES ($1, $2, $3, $4)";
+        $resultado = pg_query_params($conexion, $sql, [$nombre, $correo, $telefono, $ciudad]);
     } else {
         $sql = "UPDATE usuarios SET
-                nombre='$nombre',
-                correo='$correo',
-                telefono='$telefono',
-                ciudad='$ciudad'
-                WHERE id=$id";
+                nombre=$1,
+                correo=$2,
+                telefono=$3,
+                ciudad=$4
+                WHERE id=$5";
+        $resultado = pg_query_params($conexion, $sql, [$nombre, $correo, $telefono, $ciudad, $id]);
     }
 
-    if ($conexion->query($sql)) {
+    if ($resultado) {
         echo json_encode(["respuesta" => "ok"]);
     } else {
-        echo json_encode(["respuesta" => "error", "mensaje" => $conexion->error]);
+        echo json_encode(["respuesta" => "error", "mensaje" => pg_last_error($conexion)]);
     }
     exit;
 }
@@ -103,12 +100,13 @@ if ($accion == "agregar" || $accion == "editar") {
 if ($accion == "eliminar") {
     $id = intval($_POST["id"] ?? 0);
 
-    $sql = "DELETE FROM usuarios WHERE id=$id";
+    $sql = "DELETE FROM usuarios WHERE id=$1";
+    $resultado = pg_query_params($conexion, $sql, [$id]);
 
-    if ($conexion->query($sql)) {
+    if ($resultado) {
         echo json_encode(["respuesta" => "ok"]);
     } else {
-        echo json_encode(["respuesta" => "error", "mensaje" => $conexion->error]);
+        echo json_encode(["respuesta" => "error", "mensaje" => pg_last_error($conexion)]);
     }
     exit;
 }
