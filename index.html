@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>AJAX con jQuery</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>
+</head>
+<body>
+
+    <main class="contenedor">
+        <h1>Catálogo de usuarios con AJAX y jQuery</h1>
+
+        <section class="tarjeta">
+            <h2>Agregar / Editar usuario</h2>
+
+            <input type="hidden" id="idUsuario">
+
+            <label>Nombre:</label>
+            <input type="text" id="nombre">
+
+            <label>Correo:</label>
+            <input type="email" id="correo">
+
+            <label>Teléfono:</label>
+            <input type="text" id="telefono">
+
+            <label>Ciudad:</label>
+            <input type="text" id="ciudad">
+
+            <button type="button" id="btnGuardar">Guardar</button>
+            <button type="button" id="btnLimpiar">Limpiar</button>
+
+        </section>
+
+        <section class="tarjeta">
+            <h2>Buscar y filtrar registros</h2>
+
+            <label>Buscar:</label>
+            <input type="text" id="busqueda" placeholder="Buscar por nombre, correo, teléfono o ciudad">
+
+            <label>Registros por página:</label>
+            <select id="limite">
+                <option value="5">5 registros</option>
+                <option value="10">10 registros</option>
+            </select>
+
+            <label>Orden:</label>
+            <select id="orden">
+                <option value="ASC">Ascendente</option>
+                <option value="DESC">Descendente</option>
+            </select>
+
+            <p id="totalRegistros"></p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Ciudad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaUsuarios"></tbody>
+            </table>
+
+            <div id="paginacion"></div>
+        </section>
+    </main>
+    <!-- Dialogo de éxito -->
+    <div id="dialogoExito" title="Operación realizada" style="display:none;">
+    <p>La operación se realizó correctamente.</p>
+    </div>
+
+    <!-- Dialogo de error -->
+    <div id="dialogoError" title="Error" style="display:none;">
+    <p>Verifique la información capturada.</p>
+    </div>
+
+    <!-- Dialogo de confirmación -->
+    <div id="dialogoConfirmar" title="Confirmar eliminación" style="display:none;">
+    <p>¿Desea eliminar este usuario?</p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
